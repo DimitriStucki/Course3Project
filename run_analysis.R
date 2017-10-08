@@ -3,7 +3,7 @@
 
 ################
 ## Preliminaries
-setwd("./Data/")
+# setwd("./Data/")
 library(plyr) # used functions: revalue()
 
 
