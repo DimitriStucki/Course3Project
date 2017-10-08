@@ -1,0 +1,172 @@
+
+### README on the R script to tidy data on Google smartphone accelerometers
+
+## Some nomenclature:
+## '' denotes a file
+## [] denotes a data frame
+## {} denotes a variable
+
+### 1) The task
+###############
+
+## 1.1) Merge the training and the test sets to create one data set.
+## 1.2) Extract only the measurements on the mean and standard deviation for each measurement.
+## 1.3) Use descriptive activity names to name the activities in the data set
+## 1.4) Appropriately label the data set with descriptive variable names.
+## 1.5) From the data set in step 4, create a second, independent tidy data set with the average of each variable for
+##      each activity and each subject.
+
+### 2) Original data
+####################
+
+### 2.1) Data source
+## The data was downloaded from 'https://d396qusza40orc.cloudfront.net/getdata%2Fprojectfiles%2FUCI%20HAR%20Dataset.zip'
+## On Oktober 8, 2017
+
+### 2.2) Data content (as described in 'README.txt')
+## 'README.txt':
+## 'features_info.txt': Shows information about the variables used on the feature vector.
+## 'features.txt': List of all features.
+## 'activity_labels.txt': Links the class labels with their activity name.
+## 'train/X_train.txt': Training set.
+## 'train/y_train.txt': Training labels.
+## 'test/X_test.txt': Test set.
+## 'test/y_test.txt': Test labels.
+## The following files are available for the train and test data. Their descriptions are equivalent. 
+## 'train/subject_train.txt': Each row identifies the subject who performed the activity for each window sample.
+##        Its range is from 1 to 30. 
+## 'train/Inertial Signals/total_acc_x_train.txt': The acceleration signal from the smartphone accelerometer X axis in
+##        standard gravity units 'g'. Every row shows a 128 element vector. The same description applies for the
+##        'total_acc_x_train.txt' and 'total_acc_z_train.txt' files for the Y and Z axis. 
+## 'train/Inertial Signals/body_acc_x_train.txt': The body acceleration signal obtained by subtracting the gravity from
+##        the total acceleration. 
+## 'train/Inertial Signals/body_gyro_x_train.txt': The angular velocity vector measured by the gyroscope for each window
+##        sample. The units are radians/second. 
+
+## 2.3) Used files
+## The script uses the following files:
+## 'features.txt' (used to extract the origial labels of the variables)
+## 'activity_labels.txt' (manual use only, used to copy the labels of the activity levels into the R-script)
+## 'train/X_train.txt' (source of the original variables of the training set)
+## 'train/y_train.txt' (source of the original response (y) variable of the training set)
+## 'train/subject_train.txt' (used to extract the subject identities for each observation in the training set)
+## 'test/X_test.txt' (source of the original variables of the test set)
+## 'test/y_test.txt' (source of the original response (y) variable of the test set)
+## 'test/subject_test.txt' (used to extract the subject identities for each observation in the test set)
+
+### 3) Script description
+#########################
+
+## Overall description
+## In a first step both of the two sets (train/test) are separately reduced to the necessary variables and extended
+## with the y-variables and subject identifiers. In a secend step, the two new data sets are merged vertically (rbind)
+## with an additional variable (factor) "set" to separate between the sets. Lastly, the new data frame is tidied up,
+## and saved to a file.
+## In addition the script performs a summarizing step to calculate the mean for each variable by activity and subject
+## (separately for the two sets). The resulting data frame is also saved to a new file.
+
+## Script workflow
+## 3.1.1) Read 'train/X_train.txt' -> [X_train]
+## 3.1.2) Read 'features.txt' -> [Features]
+## 3.1.3) Read 'train/subject_train.txt' -> [Subject]
+## 3.1.4) Add the values in [Features] as column names to [X_train]
+## 3.1.5) Read 'train/Y_train.txt' -> [Y_train]
+## 3.1.6.1) Create new data.frame [TrainingSet] with [Y_train], [Subject] and the required entries from [X_train]
+##  [Y_train]
+##	      V1				-> activity
+##  [subject]
+##	      V1				-> subject
+##  [X_train] 					-> See CodeBook_AccelerometerData.xlsx for new names
+##            1 tBodyAcc-mean()-X
+##            2 tBodyAcc-mean()-Y
+##            3 tBodyAcc-mean()-Z
+##            4 tBodyAcc-std()-X
+##            5 tBodyAcc-std()-Y
+##            6 tBodyAcc-std()-Z
+##            41 tGravityAcc-mean()-X
+##            42 tGravityAcc-mean()-Y
+##            43 tGravityAcc-mean()-Z
+##            44 tGravityAcc-std()-X
+##            45 tGravityAcc-std()-Y
+##            46 tGravityAcc-std()-Z
+##            81 tBodyAccJerk-mean()-X
+##            82 tBodyAccJerk-mean()-Y
+##            83 tBodyAccJerk-mean()-Z
+##            84 tBodyAccJerk-std()-X
+##            85 tBodyAccJerk-std()-Y
+##            86 tBodyAccJerk-std()-Z
+##            121 tBodyGyro-mean()-X
+##            122 tBodyGyro-mean()-Y
+##            123 tBodyGyro-mean()-Z
+##            124 tBodyGyro-std()-X
+##            125 tBodyGyro-std()-Y
+##            126 tBodyGyro-std()-Z
+##            161 tBodyGyroJerk-mean()-X
+##            162 tBodyGyroJerk-mean()-Y
+##            163 tBodyGyroJerk-mean()-Z
+##            164 tBodyGyroJerk-std()-X
+##            165 tBodyGyroJerk-std()-Y
+##            166 tBodyGyroJerk-std()-Z
+##            201 tBodyAccMag-mean()
+##            202 tBodyAccMag-std()
+##            214 tGravityAccMag-mean()
+##            215 tGravityAccMag-std()
+##            227 tBodyAccJerkMag-mean()
+##            228 tBodyAccJerkMag-std()
+##            240 tBodyGyroMag-mean()
+##            241 tBodyGyroMag-std()
+##            253 tBodyGyroJerkMag-mean()
+##            254 tBodyGyroJerkMag-std()
+##            266 fBodyAcc-mean()-X
+##            267 fBodyAcc-mean()-Y
+##            268 fBodyAcc-mean()-Z
+##            269 fBodyAcc-std()-X
+##            270 fBodyAcc-std()-Y
+##            271 fBodyAcc-std()-Z
+##            345 fBodyAccJerk-mean()-X
+##            346 fBodyAccJerk-mean()-Y
+##            347 fBodyAccJerk-mean()-Z
+##            348 fBodyAccJerk-std()-X
+##            349 fBodyAccJerk-std()-Y
+##            350 fBodyAccJerk-std()-Z
+##            424 fBodyGyro-mean()-X
+##            425 fBodyGyro-mean()-Y
+##            426 fBodyGyro-mean()-Z
+##            427 fBodyGyro-std()-X
+##            428 fBodyGyro-std()-Y
+##            429 fBodyGyro-std()-Z
+##            503 fBodyAccMag-mean()
+##            504 fBodyAccMag-std()
+##            516 fBodyBodyAccJerkMag-mean()
+##            517 fBodyBodyAccJerkMag-std()
+##            529 fBodyBodyGyroMag-mean()
+##            530 fBodyBodyGyroMag-std()
+##            542 fBodyBodyGyroJerkMag-mean()
+##            543 fBodyBodyGyroJerkMag-std()
+## 3.1.6.2) Add a new column with a factor {set} all values set to "Train" to indicate the identity of the entries as
+##        training data
+## 3.1.7) Remove [Y_train] and [X_train] to save RAM
+
+## 3.2.1) Read 'test/X_test.txt' -> [X_test]
+## 3.2.2) Add the values in [Features] as column names to [X_test]
+## 3.2.3) Read 'test/subject_test' -> [Subject] (overwrite from previous as not needed anymore)
+## 3.2.4) Read 'test/Y_test.txt' -> [Y_test]
+## 3.2.5.1) Create new data.frame [TestSet] with [Y_test], [Subject] and the required entries from [X_test]
+##          (See section 3.1.6.1)) for the required entries)
+## 3.2.5.2) Add a new column with a factor {set} all values set to "Test" to indicate the identity of the entries as
+##          test data
+## 3.2.6) Remove [Y_test], [X_test], [Subject] and [Features] to save RAM
+## 3.2.7) Combine [TrainSet] and [TestSet] as new data fame [AccelerometerData] (rbind)
+## 3.2.8) Remove [TrainSet] and [TestSet] to save RAM
+
+## 3.3.1) Rename the activity levels, rename the variable lables
+##        activity labels: (manually copied from 'activity_labels.txt')
+## 3.3.2) Simplify the variable names
+   
+## 3.3.3) Save the data frame [AccelerometerData] to the file 'AccelerometerData.txt'
+
+## 3.4.1) Create new data frame [AccelerometerDataMean] with all values averaged by {subject}, {activity} and {set}
+##        For this the function colMeans() is applied on a list which was split by {subject}, {activity} and {set}
+##        Non-exisiting combinations between {subject}, {activity} and {set} are dropped to simplify the outcome
+## 3.4.2) Tidy up the outcome by removing the rownames and correctly labeling all variables
+## 3.4.3) Save the data frame [AccelerometerDataMean] to the file 'AccelerometerDataMean.txt'
